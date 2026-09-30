@@ -1,0 +1,7 @@
+# 设备侧产物与本地产物不入库
+*.log
+*.log.txt
+*.bak
+out/
+build/
+dist/
