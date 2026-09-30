@@ -4,7 +4,7 @@
 
 One-click root for the **Redmi Note 9 5G (cannon)** via a runtime kernel exploit chain — no bootloader unlock, zero partition writes. Targets kernel `4.14.186-perf-00243-g9a0d96109bda`; the exploit binary hard-refuses any other kernel build, which naturally bounds the device scope. Root does not persist across reboots — re-run the chain after every boot.
 
-## Quick start (adb shell)
+## Quick start (adb shell, form A)
 
 ```sh
 ./scripts/install.sh   # push assets to /data/local/tmp + md5 self-check (no partition writes)
@@ -12,6 +12,10 @@ One-click root for the **Redmi Note 9 5G (cannon)** via a runtime kernel exploit
 ```
 
 Success marks in the device log `/data/local/tmp/t37-last.log`: `ASHMEM LIVE AGAIN` / `UID 0 ACHIEVED` / `ARMED` / `MANAGER CROWNED` / `ROUND OK`. The KernelSU manager app should then report **working (v3.3.0, 32601-2)**.
+
+## Quick start (form B, standalone app, no PC)
+
+Install the m1s release APK (checksum table below) → launch Shizuku via the in-app guide (wireless-debugging deep link + pairing steps) → tap **one-click ROOT**. The triplet (probe / kernelsu.ko / hook mask) is **embedded in the APK**: before every run the app verifies the md5 of the copies in `/data/local/tmp`, and re-extracts them from the APK over the Shizuku shell domain on mismatch (self-healing) — **no adb pre-provisioning needed**. The old m1s (v4, debug-signed) differs from the new release signature: first install requires uninstall + reinstall + re-granting Shizuku (paid once).
 
 ## Asset checksums
 
@@ -22,6 +26,7 @@ Success marks in the device log `/data/local/tmp/t37-last.log`: `ASHMEM LIVE AGA
 | `assets/ko/ksu-hook-set` | content `0x1F` |
 | `assets/manager-apk/KernelSU_v3.3.0_32601-release.apk` | `b1b4b931209c2b1215914f85d9741aba` |
 | `hello.ko` (probe self-test module; no host copy, device-side conditional check) | `f1e1233d` (first 8 hex) |
+| m1s release APK v5.0 (form B, `com.ghostlock.m1s`) | `71ddd69b54a90d079589e752e33b55a2` |
 
 ## Safety rules (must read)
 
@@ -38,7 +43,7 @@ assets/probe/        exploit probe sources + daily binary t37_dryrun3
 assets/ko/           kernelsu.ko v3 + module sources (4.14 non-GKI variant) + hook mask
 assets/manager-apk/  KernelSU manager v3.3.0 (upstream release)
 assets/m0a/          M0a capability probe (optional diagnostic tool)
-app/m1s/             form-B shell app sources (Shizuku; imported as-is, not reworked in this release)
+app/m1s/             form-B shell app (Gradle project; embedded self-healing assets; Shizuku)
 manager/KernelSU/    upstream manager source tree (license / provenance reference)
 scripts/             install.sh / root.sh
 docs/                oneclick-root-guide.md (form-A manual) / m1s-shizuku-validation.md (form-B runbook)
@@ -56,5 +61,4 @@ The research tickets, issues and handoffs of the cannon-root engineering effort 
 
 ## Roadmap (not in this release)
 
-- Form B: standalone app with embedded, self-healing assets (Shizuku shell domain), a Gradle-based build pipeline, guided Shizuku authorization, and keystore management.
 - Auto-remind / auto-root after reboot (deferred by decision, 2026-09-30).

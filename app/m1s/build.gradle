@@ -1,0 +1,5 @@
+// cannon-onekey B 形态(m1s)根构建脚本。
+// 就地重构自手工链 build.sh(aidl+javac+d8+aapt2+apksigner),git 历史可溯。
+plugins {
+    id 'com.android.application' version '8.9.2' apply false
+}

@@ -1,0 +1,100 @@
+// m1s(B 形态壳)——Shizuku shell 域承载现成探针。
+// 与手工链对拍:minSdk 26 / targetSdk 34 / compileSdk 36 / Java 8 语法,
+// 依赖零 androidx,仅 Shizuku 三件(mavenCentral,版本锁定 13.1.5,
+// 升级另票不混入本批)。
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.ghostlock.m1s'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'com.ghostlock.m1s'
+        minSdk 26
+        targetSdk 34
+        versionCode 5
+        versionName '5.0'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    // AGP 8 默认关 AIDL;本工程 IPC 面是 IM1sService,必须开
+    buildFeatures {
+        aidl true
+    }
+
+    // 签名:release 密钥全部 repo 外(~/.gradle/gradle.properties + ~/.keystore/),
+    // 属性缺失时(如 CI/他机)release 不挂签名但 debug 仍可构建,优雅降级。
+    signingConfigs {
+        release {
+            if (project.hasProperty('CANNON_RELEASE_STORE_FILE')) {
+                storeFile file(CANNON_RELEASE_STORE_FILE)
+                storePassword CANNON_RELEASE_STORE_PASSWORD
+                keyAlias CANNON_RELEASE_KEY_ALIAS
+                keyPassword CANNON_RELEASE_KEY_PASSWORD
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (project.hasProperty('CANNON_RELEASE_STORE_FILE')) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation 'dev.rikka.shizuku:api:13.1.5'
+    implementation 'dev.rikka.shizuku:provider:13.1.5'
+    implementation 'dev.rikka.shizuku:shared:13.1.5'
+}
+
+// ---- B 形态:内嵌资产(单一权威源 = 仓库 assets/,构建期同步 + 实算 md5) ----
+// 三件套在 APK 里平铺为 assets/<name>;md5 生成常量类 AssetHashes,
+// 与 README「Asset checksums」/install.sh 对拍表同源(都出自仓库 assets/)。
+def repoAssets = file('../../../assets')
+def genAssetsDir = file("$buildDir/genAssets")
+def genJavaDir = file("$buildDir/generated/assetHashes")
+
+android.sourceSets.main.assets.srcDirs += genAssetsDir
+android.sourceSets.main.java.srcDirs += genJavaDir
+
+import java.security.MessageDigest
+static String md5Hex(File f) {
+    return MessageDigest.getInstance('MD5').digest(f.bytes).encodeHex().toString()
+}
+
+tasks.register('syncEmbeddedAssets', Copy) {
+    from(files("$repoAssets/probe/bin/t37_dryrun3",
+               "$repoAssets/ko/kernelsu.ko",
+               "$repoAssets/ko/ksu-hook-set"))
+    into(genAssetsDir)
+}
+
+tasks.register('generateAssetHashes') {
+    dependsOn 'syncEmbeddedAssets'
+    outputs.dir(genJavaDir)
+    doLast {
+        def pkg = new File(genJavaDir, 'com/ghostlock/m1s')
+        pkg.mkdirs()
+        new File(pkg, 'AssetHashes.java').text = """package com.ghostlock.m1s;
+
+/** 构建期自动生成(实算自 APK assets,勿手改);与 README/install.sh 资产表同源。 */
+public final class AssetHashes {
+    public static final String PROBE = "${md5Hex(file("$genAssetsDir/t37_dryrun3"))}";
+    public static final String KO = "${md5Hex(file("$genAssetsDir/kernelsu.ko"))}";
+    public static final String HOOK_SET = "${md5Hex(file("$genAssetsDir/ksu-hook-set"))}";
+}
+"""
+    }
+}
+
+tasks.named('preBuild') { dependsOn 'generateAssetHashes' }

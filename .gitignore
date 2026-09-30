@@ -5,3 +5,5 @@
 out/
 build/
 dist/
+local.properties
+.gradle/
