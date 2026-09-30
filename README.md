@@ -1,58 +1,60 @@
 # cannon-onekey
 
-Redmi Note 9 5G(cannon)专用免解 BL 一键 root。内核 `4.14.186-perf-00243-g9a0d96109bda`(uname 硬门,天然限定设备范围);root 不落盘,每次开机重跑一次。
+[English](README.md) | [简体中文](README_ZH.md)
 
-## 快速开始(adb shell 方案)
+One-click root for the **Redmi Note 9 5G (cannon)** via a runtime kernel exploit chain — no bootloader unlock, zero partition writes. Targets kernel `4.14.186-perf-00243-g9a0d96109bda`; the exploit binary hard-refuses any other kernel build, which naturally bounds the device scope. Root does not persist across reboots — re-run the chain after every boot.
+
+## Quick start (adb shell)
 
 ```sh
-./scripts/install.sh   # 推资产到 /data/local/tmp + md5 自证(不写任何分区)
-./scripts/root.sh      # 停管理器 → 跑探针 → 验收,约 10 秒
+./scripts/install.sh   # push assets to /data/local/tmp + md5 self-check (no partition writes)
+./scripts/root.sh      # stop the manager apps → run the exploit probe → verify, ~10 s
 ```
 
-验收绿标记(设备 `/data/local/tmp/t37-last.log`):`ASHMEM LIVE AGAIN` / `UID 0 ACHIEVED` / `ARMED` / `MANAGER CROWNED` / `ROUND OK`;KernelSU 管理器显示「工作中 v3.3.0 (32601-2)」。
+Success marks in the device log `/data/local/tmp/t37-last.log`: `ASHMEM LIVE AGAIN` / `UID 0 ACHIEVED` / `ARMED` / `MANAGER CROWNED` / `ROUND OK`. The KernelSU manager app should then report **working (v3.3.0, 32601-2)**.
 
-## 资产 md5 对拍表
+## Asset checksums
 
-| 文件 | md5 / 内容 |
+| File | md5 / content |
 |---|---|
 | `assets/probe/bin/t37_dryrun3` | `eeadf63ac557d5a7c2d946b13de06636` |
-| `assets/ko/kernelsu.ko`(v3) | `3f6ab77ed7cae2aecb742492e142edef` |
-| `assets/ko/ksu-hook-set` | 内容 `0x1F` |
+| `assets/ko/kernelsu.ko` (v3) | `3f6ab77ed7cae2aecb742492e142edef` |
+| `assets/ko/ksu-hook-set` | content `0x1F` |
 | `assets/manager-apk/KernelSU_v3.3.0_32601-release.apk` | `b1b4b931209c2b1215914f85d9741aba` |
-| `hello.ko`(探针自检件,host 无副本,设备侧条件校验) | `f1e1233d`(前 8 位) |
+| `hello.ko` (probe self-test module; no host copy, device-side conditional check) | `f1e1233d` (first 8 hex) |
 
-## 纪律(必读)
+## Safety rules (must read)
 
-- 跑探针前必停管理器(`me.weishu.kernelsu` + `com.miui.securitycenter`),脚本已内置。
-- uptime 门禁已取消(2026-09-30 拍板),开机即可跑。唯一保留失败驱动护栏:连续 panic≥2 → 冷静 70 分钟(uptime≥4200s)再单次试;仍炸先读 pstore 现场别再试。
-- 别用 `t37_dryrun2` 当日常件(无 blob 修复,崩回潮);别动任何 `*.bak`;别删改 `ksu-hook-set`。
-- 模块未载时别开管理器闲逛(历史 rescueparty 诱因)。
-- root 不落盘,每次重启重跑;OTA/换内核后 uname 门会拒跑(安全特性)。
+- Always stop the manager apps (`me.weishu.kernelsu` + `com.miui.securitycenter`) before running the probe; both scripts do this for you.
+- The uptime gate was lifted by decision (2026-09-30): the chain may run right after boot. The one remaining failure-driven guard: after ≥ 2 consecutive panics, cool down for 70 minutes (uptime ≥ 4200 s) and retry once; if it still panics, read the pstore forensics before trying again.
+- Never use `t37_dryrun2` as the daily driver (it lacks the ashmem blob fix; app-info crashes resurface). Do not touch any `*.bak` files; never delete or edit `ksu-hook-set`.
+- Do not open the manager app while the module is not loaded (a historic trigger of MIUI rescueparty crash loops).
+- Root is not persistent: re-run after every reboot. After an OTA or kernel change the uname gate refuses to run (by design).
 
-## 目录结构
+## Directory layout
 
 ```
-assets/probe/    探针源码 + 日常件 t37_dryrun3
-assets/ko/       kernelsu.ko v3 + 源码(4.14 非 GKI 自改版)+ hook 掩码
-assets/manager-apk/  KernelSU manager v3.3.0(上游 release)
-assets/m0a/      M0a 能力探针(诊断工具,可选)
-app/m1s/         B 形态壳 app 源码(Shizuku;本期只入库未重构)
-manager/KernelSU/    管理器上游源码树(许可与出处参考)
-scripts/         install.sh / root.sh
-docs/            oneclick-root-guide.md(A 形态手册)/ m1s-shizuku-validation.md(B 形态 runbook)
+assets/probe/        exploit probe sources + daily binary t37_dryrun3
+assets/ko/           kernelsu.ko v3 + module sources (4.14 non-GKI variant) + hook mask
+assets/manager-apk/  KernelSU manager v3.3.0 (upstream release)
+assets/m0a/          M0a capability probe (optional diagnostic tool)
+app/m1s/             form-B shell app sources (Shizuku; imported as-is, not reworked in this release)
+manager/KernelSU/    upstream manager source tree (license / provenance reference)
+scripts/             install.sh / root.sh
+docs/                oneclick-root-guide.md (form-A manual) / m1s-shizuku-validation.md (form-B runbook)
 ```
 
-## 许可
+## Licensing
 
-- `assets/ko/`:GPL-2.0,继承上游 KernelSU 内核侧许可;本 ko 为 KernelSU 4.14 非 GKI 自改版(allowlist 持久化等)。
-- `manager/KernelSU/`:GPL-3.0,上游原树,出处 tiann/KernelSU。
-- `assets/probe/`、`app/m1s/`、`scripts/`:本项目自研。
+- `assets/ko/`: **GPL-2.0**, inherited from the upstream KernelSU kernel-side license; the module is a self-maintained 4.14 non-GKI variant (allowlist persistence, etc.).
+- `manager/KernelSU/`: **GPL-3.0**, upstream tree, provenance: [tiann/KernelSU](https://github.com/tiann/KernelSU).
+- `assets/probe/`, `app/m1s/`, `scripts/`: original work of this project.
 
-## 票档与研究史
+## Research archive
 
-cannon-root 研究票档/issues/handoff 留在原工程(ghostlock-app 仓库 `.scratch/cannon-root/`)未迁移,本 repo 只收产品资产;`docs/` 两份手册内的票记索引仍指向原处。
+The research tickets, issues and handoffs of the cannon-root engineering effort stay in the original private workspace and are **not** published in this repo; product assets only. The ticket indexes inside the two `docs/` manuals still point there.
 
-## 规划中(本期未做)
+## Roadmap (not in this release)
 
-- B 形态独立 app:资产内嵌自愈 APK(Shizuku shell 域)、构建管线迁 gradle、授权引导页、keystore 管理。
-- 「重启后自动提醒/自动 root」增强(2026-09-30 拍板本期不做)。
+- Form B: standalone app with embedded, self-healing assets (Shizuku shell domain), a Gradle-based build pipeline, guided Shizuku authorization, and keystore management.
+- Auto-remind / auto-root after reboot (deferred by decision, 2026-09-30).
