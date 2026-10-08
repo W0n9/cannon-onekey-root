@@ -14,8 +14,8 @@ android {
         applicationId 'com.ghostlock.m1s'
         minSdk 26
         targetSdk 34
-        versionCode 5
-        versionName '5.0'
+        versionCode 6
+        versionName '6.0'
     }
 
     compileOptions {
@@ -58,8 +58,9 @@ dependencies {
 }
 
 // ---- B 形态:内嵌资产(单一权威源 = 仓库 assets/,构建期同步 + 实算 md5) ----
-// 三件套在 APK 里平铺为 assets/<name>;md5 生成常量类 AssetHashes,
+// 资产在 APK 里平铺为 assets/<name>;md5 生成常量类 AssetHashes,
 // 与 README「Asset checksums」/install.sh 对拍表同源(都出自仓库 assets/)。
+// v6 双模:两份 ko 源都内嵌,生效位选择在 Java 侧(对拷语义同 root.sh §3)。
 def repoAssets = file('../../../assets')
 def genAssetsDir = file("$buildDir/genAssets")
 def genJavaDir = file("$buildDir/generated/assetHashes")
@@ -75,6 +76,7 @@ static String md5Hex(File f) {
 tasks.register('syncEmbeddedAssets', Copy) {
     from(files("$repoAssets/probe/bin/t37_dryrun3",
                "$repoAssets/ko/kernelsu.ko",
+               "$repoAssets/ko/resukisu.ko",
                "$repoAssets/ko/ksu-hook-set"))
     into(genAssetsDir)
 }
@@ -91,6 +93,7 @@ tasks.register('generateAssetHashes') {
 public final class AssetHashes {
     public static final String PROBE = "${md5Hex(file("$genAssetsDir/t37_dryrun3"))}";
     public static final String KO = "${md5Hex(file("$genAssetsDir/kernelsu.ko"))}";
+    public static final String KO_RESUKISU = "${md5Hex(file("$genAssetsDir/resukisu.ko"))}";
     public static final String HOOK_SET = "${md5Hex(file("$genAssetsDir/ksu-hook-set"))}";
 }
 """

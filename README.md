@@ -18,7 +18,7 @@ Success marks in the device log `/data/local/tmp/t37-last.log`: `ASHMEM LIVE AGA
 
 ## Quick start (form B, standalone app, no PC)
 
-Install the m1s release APK (checksum table below) → launch Shizuku via the in-app guide (wireless-debugging deep link + pairing steps) → tap **one-click ROOT**. The triplet (probe / kernelsu.ko / hook mask) is **embedded in the APK**: before every run the app verifies the md5 of the copies in `/data/local/tmp`, and re-extracts them from the APK over the Shizuku shell domain on mismatch (self-healing) — **no adb pre-provisioning needed**. The old m1s (v4, debug-signed) differs from the new release signature: first install requires uninstall + reinstall + re-granting Shizuku (paid once).
+Install the m1s release APK (checksum table below) → launch Shizuku via the in-app guide (wireless-debugging deep link + pairing steps) → pick the mode (**KernelSU** mainline / **ReSukiSU**) → tap **one-click ROOT**. The assets (probe / both ko variants / hook mask) are **embedded in the APK**: before every run the app verifies the md5 of the copies in `/data/local/tmp`, and re-extracts them from the APK over the Shizuku shell domain on mismatch (self-healing) — **no adb pre-provisioning needed**. The selected mode is copied onto the active slot (`kernelsu.ko`) exactly like `root.sh` does; switching modes takes effect on the first run after a reboot (finit EEXIST). The old m1s (v4, debug-signed) differs from the new release signature: first install requires uninstall + reinstall + re-granting Shizuku (paid once).
 
 ## Asset checksums
 
@@ -31,11 +31,11 @@ Install the m1s release APK (checksum table below) → launch Shizuku via the in
 | `assets/manager-apk/ReSukiSU_v4.2.0-rc3_35171-arm64-v8a-release.apk` | `bc324b81f47f9087317582657e4e922f` |
 | `assets/manager-apk/KernelSU_v3.3.0_32601-release.apk` | `b1b4b931209c2b1215914f85d9741aba` |
 | `hello.ko` (probe self-test module; no host copy, device-side conditional check) | `f1e1233d` (first 8 hex) |
-| m1s release APK v5.0 (form B, `com.ghostlock.m1s`) | `71ddd69b54a90d079589e752e33b55a2` |
+| m1s release APK v6.0 (form B, dual-mode, `com.ghostlock.m1s`) | `114289c8110b926b7c05f40c2dcec19d` |
 
 ## Safety rules (must read)
 
-- Always stop the manager apps (`me.weishu.kernelsu` + `com.miui.securitycenter`) before running the probe; both scripts do this for you.
+- Always stop the manager apps (`me.weishu.kernelsu` + `com.resukisu.resukisu` + `com.miui.securitycenter`) before running the probe; both scripts do this for you.
 - The uptime gate was lifted by decision (2026-09-30): the chain may run right after boot. The one remaining failure-driven guard: after ≥ 2 consecutive panics, cool down for 70 minutes (uptime ≥ 4200 s) and retry once; if it still panics, read the pstore forensics before trying again.
 - Never use `t37_dryrun2` as the daily driver (it lacks the ashmem blob fix; app-info crashes resurface). Do not touch any `*.bak` files; never delete or edit `ksu-hook-set`.
 - Do not open the manager app while the module is not loaded (a historic trigger of MIUI rescueparty crash loops).

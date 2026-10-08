@@ -6,8 +6,9 @@ interface IM1sService {
      *  要靠它打开自身 ZipFile。绑定成功后、startChain 前调用。 */
     void provisionAssets(String apkPath);
     /** 异步启动一键链(内部起线程跑脚本);重复调用安全忽略。
-     *  v4:force 参数废除(uptime 门禁已删),签名保留兼容。 */
-    void startChain(boolean force);
+     *  v6:mode = "kernelsu"|"resukisu"(选择生效位 ko,对拷语义同 root.sh §3);
+     *  改签名同时 UserService version 升 3,Shizuku 会重启旧版本服务。 */
+    void startChain(String mode);
     /** 取输出缓冲尾部 maxChars 字符(UI 轮询用)。 */
     String tailLog(int maxChars);
     boolean isRunning();

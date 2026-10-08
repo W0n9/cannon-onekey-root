@@ -17,7 +17,7 @@ Redmi Note 9 5G(cannon)专用免解 BL 一键 root:运行时内核漏洞链,不�
 
 ## 快速开始(B 形态,独立 app 免电脑)
 
-安装 m1s release APK(资产表见下)→ app 内引导页启动 Shizuku(无线调试直达按钮 + 配对指引)→ 点「一键 ROOT」。三件套(探针 / kernelsu.ko / hook 掩码)**内嵌 APK**,跑链前自动校验 `/data/local/tmp` 现件 md5,缺失或损坏即从 APK 经 Shizuku shell 解出重写并复验(自愈),**无需 adb 预置资产**。旧版 m1s(v4,debug 签名)与新 release 签名不同,首装需卸载重装并重新授权 Shizuku(一次付清)。
+安装 m1s release APK(资产表见下)→ app 内引导页启动 Shizuku(无线调试直达按钮 + 配对指引)→ 选模(**KernelSU** 主线 / **ReSukiSU**)→ 点「一键 ROOT」。资产(探针 / 两份 ko / hook 掩码)**内嵌 APK**,跑链前自动校验 `/data/local/tmp` 现件 md5,缺失或损坏即从 APK 经 Shizuku shell 解出重写并复验(自愈),**无需 adb 预置资产**。所选模按 root.sh 同款语义对拷到生效位 `kernelsu.ko`;切换模须重启后首次跑链生效(finit EEXIST)。旧版 m1s(v4,debug 签名)与新 release 签名不同,首装需卸载重装并重新授权 Shizuku(一次付清)。
 
 ## 资产 md5 对拍表
 
@@ -30,11 +30,11 @@ Redmi Note 9 5G(cannon)专用免解 BL 一键 root:运行时内核漏洞链,不�
 | `assets/manager-apk/ReSukiSU_v4.2.0-rc3_35171-arm64-v8a-release.apk` | `bc324b81f47f9087317582657e4e922f` |
 | `assets/manager-apk/KernelSU_v3.3.0_32601-release.apk` | `b1b4b931209c2b1215914f85d9741aba` |
 | `hello.ko`(探针自检件,host 无副本,设备侧条件校验) | `f1e1233d`(前 8 位) |
-| m1s release APK v5.0(B 形态,`com.ghostlock.m1s`) | `71ddd69b54a90d079589e752e33b55a2` |
+| m1s release APK v6.0(B 形态,双模,`com.ghostlock.m1s`) | `114289c8110b926b7c05f40c2dcec19d` |
 
 ## 纪律(必读)
 
-- 跑探针前必停管理器(`me.weishu.kernelsu` + `com.miui.securitycenter`),两个脚本均已内置。
+- 跑探针前必停管理器(`me.weishu.kernelsu` + `com.resukisu.resukisu` + `com.miui.securitycenter`),两个脚本均已内置。
 - uptime 门禁已取消(2026-09-30 拍板),开机即可跑。唯一保留失败驱动护栏:连续 panic≥2 → 冷静 70 分钟(uptime≥4200s)再单次试;仍炸先读 pstore 现场别再试。
 - 别用 `t37_dryrun2` 当日常件(无 ashmem blob 修复,应用信息页崩会回潮);别动任何 `*.bak`;别删改 `ksu-hook-set`。
 - 模块未载时别开管理器闲逛(历史 MIUI rescueparty 连环崩诱因)。
