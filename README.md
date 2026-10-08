@@ -7,9 +7,12 @@ One-click root for the **Redmi Note 9 5G (cannon)** via a runtime kernel exploit
 ## Quick start (adb shell, form A)
 
 ```sh
-./scripts/install.sh   # push assets to /data/local/tmp + md5 self-check (no partition writes)
-./scripts/root.sh      # stop the manager apps → run the exploit probe → verify, ~10 s
+./scripts/install.sh            # push assets (both ko variants) + md5 self-check (no partition writes)
+./scripts/root.sh               # kernelsu mode (default), ~10 s
+./scripts/root.sh resukisu      # ReSukiSU ko mode (takes effect on the first run after a reboot)
 ```
+
+Manager selection (kernelsu / resukisu) and the support matrix: [docs/resukisu-bringup-notes.md](docs/resukisu-bringup-notes.md).
 
 Success marks in the device log `/data/local/tmp/t37-last.log`: `ASHMEM LIVE AGAIN` / `UID 0 ACHIEVED` / `ARMED` / `MANAGER CROWNED` / `ROUND OK`. The KernelSU manager app should then report **working (v3.3.0, 32601-2)**.
 
@@ -24,6 +27,8 @@ Install the m1s release APK (checksum table below) → launch Shizuku via the in
 | `assets/probe/bin/t37_dryrun3` | `eeadf63ac557d5a7c2d946b13de06636` |
 | `assets/ko/kernelsu.ko` (v3) | `3f6ab77ed7cae2aecb742492e142edef` |
 | `assets/ko/ksu-hook-set` | content `0x1F` |
+| `assets/ko/resukisu.ko`(ReSukiSU @ ee1cdc53) | `96aa20363a9b6e28bad30192f3a4be84` |
+| `assets/manager-apk/ReSukiSU_v4.2.0-rc3_35171-arm64-v8a-release.apk` | `bc324b81f47f9087317582657e4e922f` |
 | `assets/manager-apk/KernelSU_v3.3.0_32601-release.apk` | `b1b4b931209c2b1215914f85d9741aba` |
 | `hello.ko` (probe self-test module; no host copy, device-side conditional check) | `f1e1233d` (first 8 hex) |
 | m1s release APK v5.0 (form B, `com.ghostlock.m1s`) | `71ddd69b54a90d079589e752e33b55a2` |

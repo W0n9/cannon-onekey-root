@@ -7,9 +7,11 @@ Redmi Note 9 5G(cannon)专用免解 BL 一键 root:运行时内核漏洞链,不�
 ## 快速开始(adb shell,A 形态)
 
 ```sh
-./scripts/install.sh   # 推资产到 /data/local/tmp + md5 自证(不写任何分区)
-./scripts/root.sh      # 停管理器 → 跑探针 → 验收,约 10 秒
+./scripts/install.sh            # 推资产(两份 ko)+ md5 自证(不写任何分区)
+./scripts/root.sh               # 默认 kernelsu 模,约 10 秒
+./scripts/root.sh resukisu      # ReSukiSU ko 模(切换须重启后首次跑链生效)
 ```
+双模选择与管理器支持矩阵见 [docs/resukisu-bringup-notes.md](docs/resukisu-bringup-notes.md)。
 
 验收绿标记(设备日志 `/data/local/tmp/t37-last.log`):`ASHMEM LIVE AGAIN` / `UID 0 ACHIEVED` / `ARMED` / `MANAGER CROWNED` / `ROUND OK`;KernelSU 管理器应显示「工作中 (v3.3.0, 32601-2)」。
 
@@ -24,6 +26,8 @@ Redmi Note 9 5G(cannon)专用免解 BL 一键 root:运行时内核漏洞链,不�
 | `assets/probe/bin/t37_dryrun3` | `eeadf63ac557d5a7c2d946b13de06636` |
 | `assets/ko/kernelsu.ko`(v3) | `3f6ab77ed7cae2aecb742492e142edef` |
 | `assets/ko/ksu-hook-set` | 内容 `0x1F` |
+| `assets/ko/resukisu.ko`(ReSukiSU @ ee1cdc53) | `96aa20363a9b6e28bad30192f3a4be84` |
+| `assets/manager-apk/ReSukiSU_v4.2.0-rc3_35171-arm64-v8a-release.apk` | `bc324b81f47f9087317582657e4e922f` |
 | `assets/manager-apk/KernelSU_v3.3.0_32601-release.apk` | `b1b4b931209c2b1215914f85d9741aba` |
 | `hello.ko`(探针自检件,host 无副本,设备侧条件校验) | `f1e1233d`(前 8 位) |
 | m1s release APK v5.0(B 形态,`com.ghostlock.m1s`) | `71ddd69b54a90d079589e752e33b55a2` |
