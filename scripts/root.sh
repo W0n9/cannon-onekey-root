@@ -46,6 +46,9 @@ fi
 echo "生效 ko: $MODE ($CUR)"
 
 # ---- 4. 一键(全自动:uname 硬门 → slide 自采双采门 → root 链 → ashmem blob 修复 → finit 载 ko → de-CFI → ARM → 加冕 → 自清场) ----
+# 42-r129:跑链前开 teardown——清 victim 悬空 pi_blocked_on,使其 pause 停放(0% CPU);
+# 缺它 victim 用户态满转 + owner 被拖进 futex 内核态满转,freezer 失效 = 息屏双核暖手宝。
+adb shell "touch $DST/t37-teardown"
 adb shell "cd $DST && ./t37_dryrun3 physrw 1"
 
 # ---- 5. 验收(约 10 秒;终端无输出属正常,日志在设备 t37-last.log) ----

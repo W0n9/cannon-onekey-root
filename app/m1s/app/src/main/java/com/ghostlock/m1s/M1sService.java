@@ -56,6 +56,7 @@ public class M1sService extends IM1sService.Stub {
             "echo \"[m1s] ksu-hook-set=$(cat ksu-hook-set 2>/dev/null || echo MISSING)\"",
             "echo '[m1s] === 一键: ./t37_dryrun3 physrw 1 ==='",
             "rm -f /data/local/tmp/t37-last.log",
+            "touch /data/local/tmp/t37-teardown",
             "./t37_dryrun3 physrw 1 >>/data/local/tmp/t37-host.log 2>&1 &",
             "P=$!",
             "echo \"[m1s] 探针已启动 pid=$P(进度跟踪中;pin 子进程驻留属设计,不等进程退出)\"",

@@ -23,7 +23,7 @@ Redmi Note 9 5G(cannon)专用免解 BL 一键 root:运行时内核漏洞链,不�
 
 | 文件 | md5 / 内容 |
 |---|---|
-| `assets/probe/bin/t37_dryrun3` | `eeadf63ac557d5a7c2d946b13de06636` |
+| `assets/probe/bin/t37_dryrun3` | `a7e54ec1a1a6497c2d5dbcb54b2f4365` |
 | `assets/ko/kernelsu.ko`(v3) | `3f6ab77ed7cae2aecb742492e142edef` |
 | `assets/ko/ksu-hook-set` | 内容 `0x1F` |
 | `assets/ko/resukisu.ko`(ReSukiSU @ ee1cdc53) | `96aa20363a9b6e28bad30192f3a4be84` |

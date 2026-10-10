@@ -83,6 +83,9 @@ tasks.register('syncEmbeddedAssets', Copy) {
 
 tasks.register('generateAssetHashes') {
     dependsOn 'syncEmbeddedAssets'
+    // 42-r129 修复:必须声明 inputs,否则 outputs 在就是 forever up-to-date,
+    // 资产换了哈希常量仍是旧的(资产自愈会对拍旧 md5 → 复验败拒跑)
+    inputs.dir(genAssetsDir)
     outputs.dir(genJavaDir)
     doLast {
         def pkg = new File(genJavaDir, 'com/ghostlock/m1s')

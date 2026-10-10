@@ -8,7 +8,7 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DST=/data/local/tmp
 
 # ---- md5 对拍表(与 docs/oneclick-root-guide.md §3、docs/resukisu-bringup-notes.md §5 一致) ----
-MD5_PROBE=eeadf63ac557d5a7c2d946b13de06636   # t37_dryrun3(日常一键二进制,修正 true-restore 版)
+MD5_PROBE=a7e54ec1a1a6497c2d5dbcb54b2f4365   # t37_dryrun3(42-r129:teardown 置位 + victim pause 停放,修双核满转耗电)
 MD5_KO=3f6ab77ed7cae2aecb742492e142edef      # kernelsu 模 ko(kernelsu.ko v3,v2 + save 路径 cred 修复)
 MD5_RESU=96aa20363a9b6e28bad30192f3a4be84    # resukisu 模 ko(ReSukiSU cannon-port @ ee1cdc53)
 MD5_HELLO=f1e1233d                            # hello.ko(探针自检件,host 无副本,仅设备侧条件校验,前 8 位)
