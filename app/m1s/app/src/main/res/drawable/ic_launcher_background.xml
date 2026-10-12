@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 深绿斜向渐变:与驾驶舱主按钮 #146C2E 同族,压深保对比 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:startColor="#1B8A3C"
+        android:endColor="#0F4D21"
+        android:angle="135" />
+</shape>

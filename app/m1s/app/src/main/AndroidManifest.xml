@@ -12,6 +12,8 @@
 
     <application
         android:label="m1s"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
 
         <!-- Shizuku 客户端 binder 接收点(官方固定写法) -->
