@@ -1,0 +1,67 @@
+# 发布流水线:打 v* 标签即构建 release 签名 APK 并发布 GitHub Release。
+# 标签须与 app/m1s/app/build.gradle 的 versionName 一致(v7.0 ↔ '7.0'),不一致即失败。
+# 签名材料全部走仓库 secrets(本机 ~/.gradle/gradle.properties + ~/.keystore/ 的对应值):
+#   CANNON_RELEASE_KEYSTORE_B64   —— keystore 文件 base64
+#   CANNON_RELEASE_STORE_PASSWORD / CANNON_RELEASE_KEY_ALIAS / CANNON_RELEASE_KEY_PASSWORD
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Android SDK 平台就位(runner 镜像自带则秒过)
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "platforms;android-36" "build-tools;36.0.0" > /dev/null
+
+      - name: 还原签名库
+        env:
+          KEYSTORE_B64: ${{ secrets.CANNON_RELEASE_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::缺 secret CANNON_RELEASE_KEYSTORE_B64"; exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/cannon-onekey.jks"
+
+      - name: 校验标签与 versionName 一致
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VER=$(grep -oP "versionName '\K[^']+" app/m1s/app/build.gradle)
+          if [ "$TAG" != "$VER" ]; then
+            echo "::error::标签 ${GITHUB_REF_NAME} ≠ versionName $VER —— 先 bump 再打标签"
+            exit 1
+          fi
+
+      - name: 构建 release APK
+        working-directory: app/m1s
+        env:
+          ORG_GRADLE_PROJECT_CANNON_RELEASE_STORE_FILE: ${{ runner.temp }}/cannon-onekey.jks
+          ORG_GRADLE_PROJECT_CANNON_RELEASE_STORE_PASSWORD: ${{ secrets.CANNON_RELEASE_STORE_PASSWORD }}
+          ORG_GRADLE_PROJECT_CANNON_RELEASE_KEY_ALIAS: ${{ secrets.CANNON_RELEASE_KEY_ALIAS }}
+          ORG_GRADLE_PROJECT_CANNON_RELEASE_KEY_PASSWORD: ${{ secrets.CANNON_RELEASE_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: 发布 GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          APK="m1s-${GITHUB_REF_NAME}.apk"
+          cp app/m1s/app/build/outputs/apk/release/app-release.apk "$APK"
+          gh release create "$GITHUB_REF_NAME" "$APK" \
+            --title "m1s ${GITHUB_REF_NAME}" --generate-notes --verify-tag
